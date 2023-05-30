@@ -137,30 +137,34 @@ export default function ImageZoom({
     },
   });
 
-  const pinchHandler =
-    useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
-      onStart: (event: PinchGestureHandlerEventPayload) => {
+  const pinchHandler = useAnimatedGestureHandler<
+    PinchGestureHandlerGestureEvent
+  >({
+    onStart: (event: PinchGestureHandlerEventPayload) => {
+      initialFocalX.value = event.focalX;
+      initialFocalY.value = event.focalY;
+    },
+    onActive: (event: PinchGestureHandlerEventPayload) => {
+      // onStart: focalX & focalY result both to 0 on Android
+      if (initialFocalX.value === 0 && initialFocalY.value === 0) {
         initialFocalX.value = event.focalX;
         initialFocalY.value = event.focalY;
-      },
-      onActive: (event: PinchGestureHandlerEventPayload) => {
-        // onStart: focalX & focalY result both to 0 on Android
-        if (initialFocalX.value === 0 && initialFocalY.value === 0) {
-          initialFocalX.value = event.focalX;
-          initialFocalY.value = event.focalY;
-        }
-        scale.value = clamp(event.scale, minScale, maxScale);
-        focalX.value = (centerX - initialFocalX.value) * (scale.value - 1);
-        focalY.value = (centerY - initialFocalY.value) * (scale.value - 1);
-      },
-      onFinish: () => {
+      }
+      scale.value = clamp(event.scale, minScale, maxScale);
+      focalX.value = (centerX - initialFocalX.value) * (scale.value - 1);
+      focalY.value = (centerY - initialFocalY.value) * (scale.value - 1);
+    },
+    onFinish: () => {
+      // onfinish: reset to default scale if scale less than 1
+      if (scale.value < 1) {
         scale.value = withTiming(1);
         focalX.value = withTiming(0);
         focalY.value = withTiming(0);
         initialFocalX.value = 0;
         initialFocalY.value = 0;
-      },
-    });
+      }
+    },
+  });
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
